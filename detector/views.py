@@ -24,9 +24,31 @@ def upload_image(request):
 
             # ── Extract GPS ──
             try:
-                lat, lon = extract_gps(original_path)
-                instance.latitude = lat
-                instance.longitude = lon
+                # First try GPS coordinates from camera/geolocation API
+                latitude_param = request.POST.get('latitude')
+                longitude_param = request.POST.get('longitude')
+                
+                if latitude_param and longitude_param:
+                    try:
+                        lat = round(float(latitude_param), 6)
+                        lon = round(float(longitude_param), 6)
+                        # Validate coordinates are sane
+                        if -90 <= lat <= 90 and -180 <= lon <= 180:
+                            instance.latitude = lat
+                            instance.longitude = lon
+                            print(f"GPS from geolocation API: {lat}, {lon}")
+                        else:
+                            raise ValueError("Invalid coordinate range")
+                    except (ValueError, TypeError):
+                        print(f"Invalid GPS coords from frontend: {latitude_param}, {longitude_param}")
+                        lat, lon = extract_gps(original_path)
+                        instance.latitude = lat
+                        instance.longitude = lon
+                else:
+                    # Fallback to image-based GPS extraction
+                    lat, lon = extract_gps(original_path)
+                    instance.latitude = lat
+                    instance.longitude = lon
             except Exception:
                 instance.latitude = None
                 instance.longitude = None

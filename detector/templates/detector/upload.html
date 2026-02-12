@@ -225,6 +225,10 @@
             </label>
         </div>
 
+        <!-- Hidden GPS fields -->
+        <input type="hidden" name="latitude" id="latitudeInput">
+        <input type="hidden" name="longitude" id="longitudeInput">
+
         <!-- Preview -->
         <div class="preview-card" id="previewCard">
             <img id="previewImg" alt="Preview">
@@ -266,8 +270,12 @@
     const loader    = document.getElementById('loader');
     const dropZone  = document.getElementById('dropZone');
     const frm       = document.getElementById('frm');
+    const latitudeInput = document.getElementById('latitudeInput');
+    const longitudeInput = document.getElementById('longitudeInput');
 
-    function handleFile(file) {
+    let currentGPS = null;
+
+    function handleFile(file, fromCamera = false) {
         if (!file) return;
         // Copy into the main file input
         const dt = new DataTransfer();
@@ -284,11 +292,62 @@
         const reader = new FileReader();
         reader.onload = e => { previewImg.src = e.target.result; };
         reader.readAsDataURL(file);
+
+        // If camera was used and we have GPS, add to hidden fields
+        if (fromCamera && currentGPS) {
+            latitudeInput.value = currentGPS.latitude;
+            longitudeInput.value = currentGPS.longitude;
+            console.log('GPS coords added:', currentGPS);
+        }
+    }
+
+    function getCurrentLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported'));
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const coords = {
+                        latitude: position.coords.latitude.toFixed(6),
+                        longitude: position.coords.longitude.toFixed(6)
+                    };
+                    resolve(coords);
+                },
+                error => {
+                    console.warn('GPS error:', error.message);
+                    reject(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        });
     }
 
     fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-    camInput.addEventListener('change',  e => handleFile(e.target.files[0]));
     galInput.addEventListener('change',  e => handleFile(e.target.files[0]));
+
+    // Special handler for camera - get GPS first
+    camInput.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Try to get GPS coordinates
+        try {
+            currentGPS = await getCurrentLocation();
+            console.log('GPS acquired for camera photo:', currentGPS);
+        } catch (error) {
+            console.warn('Could not get GPS for camera photo:', error.message);
+            currentGPS = null;
+        }
+
+        handleFile(file, true);
+    });
 
     frm.addEventListener('submit', () => {
         submitBtn.style.display = 'none';
