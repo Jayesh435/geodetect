@@ -24,6 +24,9 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Run database migrations
+RUN python manage.py migrate
+
 # Create media directories
 RUN mkdir -p /app/media/uploads /app/media/processed
 
