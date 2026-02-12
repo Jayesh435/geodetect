@@ -24,12 +24,13 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Run database migrations
-RUN python manage.py migrate
+# Copy and setup startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Create media directories
 RUN mkdir -p /app/media/uploads /app/media/processed
 
 EXPOSE 8000
 
-CMD ["gunicorn", "geodetect.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]
+CMD ["/app/start.sh"]

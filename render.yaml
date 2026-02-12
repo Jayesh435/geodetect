@@ -16,3 +16,4 @@ services:
       name: geodetect-media
       mountPath: /app/media
       sizeGB: 1
+    # Note: SQLite database persists in /app/ (container filesystem)
