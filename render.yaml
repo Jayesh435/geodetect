@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: geodetect
+    runtime: docker
+    plan: free
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: geodetect.settings
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: RENDER
+        value: "1"
+    disk:
+      name: geodetect-media
+      mountPath: /app/media
+      sizeGB: 1

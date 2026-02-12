@@ -12,5 +12,6 @@ urlpatterns = [
     path('', include('detector.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files (uploads & processed images) in all environments
+# On Render free tier there's no separate media CDN
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,20 @@
+.git
+.gitignore
+.vscode
+__pycache__
+*.pyc
+*.pyo
+db.sqlite3
+media/uploads/*
+media/processed/*
+*.jpg
+*.jpeg
+!detector/static/detector/logo.jpg
+!logo rumbus.jpg
+yolov8n.pt
+runs/
+*.egg-info
+.env
+.env.*
+node_modules
+README.md

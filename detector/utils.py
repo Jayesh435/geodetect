@@ -1,6 +1,6 @@
 """
-Utility functions for GPS extraction, YOLOv8 object detection,
-and HSV-based green-vegetation / tree detection.
+Utility functions for GPS extraction and HSV-based
+green-vegetation / tree detection.
 """
 
 import cv2
@@ -8,24 +8,11 @@ import re
 import numpy as np
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
-from ultralytics import YOLO
 import os
 from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
-
-# ─── YOLOv8 MODEL ─────────────────────────────────────────────────
-
-_model = None
-
-
-def get_yolo_model():
-    """Lazy-load the YOLOv8 nano model."""
-    global _model
-    if _model is None:
-        _model = YOLO(r'F:/cojag hackthon/detector/yolov8n.pt')
-    return _model
 
 
 # ─── GPS EXTRACTION ───────────────────────────────────────────────
