@@ -9,6 +9,7 @@ dist/
 build/
 *.egg-info/
 __pycache__/
+*/__pycache__/
 *.pyc
 
 # IDE
@@ -33,3 +34,9 @@ npm-debug.log*
 # Temporary files
 tmp/
 temp/
+
+# Django
+db.sqlite3
+media/uploads/
+media/processed/
+staticfiles/
