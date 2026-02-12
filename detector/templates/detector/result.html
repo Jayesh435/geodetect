@@ -1,0 +1,286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GeoDetect — Results</title>
+    <link rel="icon" href="{% static 'detector/logo.jpg' %}">
+    <style>
+        :root {
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
+            --bg: #0f1a0f;
+            --card: #1a2e1a;
+            --card-border: #2d4a2d;
+            --text: #e8f5e8;
+            --text-dim: #8cb88c;
+            --radius: 16px;
+            --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .85rem 1rem;
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1a0f 100%);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .header-left { display: flex; align-items: center; gap: .6rem; }
+        .header-left img { width: 36px; height: 36px; border-radius: 8px; }
+        .header-left h1 { font-size: 1.05rem; font-weight: 700; }
+        .back-link {
+            display: flex; align-items: center; gap: .3rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: .82rem; font-weight: 600;
+            padding: .4rem .7rem;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+        }
+        .back-link:active { background: rgba(34,197,94,.1); }
+
+        /* ── Content wrapper ── */
+        .content { padding: 1rem; max-width: 500px; margin: 0 auto; }
+
+        /* ── Processed Image ── */
+        .image-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .image-card img {
+            width: 100%; display: block;
+        }
+        .image-label {
+            padding: .6rem .85rem;
+            font-size: .78rem;
+            color: var(--text-dim);
+            display: flex; align-items: center; gap: .4rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        /* ── Maps row ── */
+        .maps-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .maps-card .coords {
+            display: flex; gap: .5rem; margin-bottom: .75rem;
+        }
+        .coord-chip {
+            flex: 1;
+            background: rgba(34,197,94,.08);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: .55rem .7rem;
+            text-align: center;
+        }
+        .coord-chip label {
+            display: block;
+            font-size: .6rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-dim);
+            margin-bottom: .2rem;
+        }
+        .coord-chip .val {
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .maps-btn {
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            width: 100%;
+            padding: .8rem;
+            background: #1d4ed8;
+            color: #fff;
+            border: none; border-radius: 10px;
+            font-size: .9rem; font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .maps-btn:active { background: #1e40af; }
+        .maps-btn svg { width: 20px; height: 20px; }
+        .no-gps { text-align: center; color: var(--text-dim); font-size: .85rem; padding: .5rem 0; }
+
+        /* ── Detections list ── */
+        .det-section {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .det-header {
+            padding: .85rem 1rem;
+            font-weight: 700;
+            font-size: .9rem;
+            display: flex; align-items: center; gap: .4rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .det-count {
+            margin-left: auto;
+            background: var(--primary);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .15rem .5rem;
+            border-radius: 99px;
+        }
+        .det-item {
+            display: flex; align-items: center;
+            padding: .7rem 1rem;
+            border-bottom: 1px solid rgba(45,74,45,.5);
+            gap: .75rem;
+        }
+        .det-item:last-child { border-bottom: none; }
+        .det-icon {
+            width: 36px; height: 36px;
+            background: rgba(34,197,94,.12);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .det-info { flex: 1; min-width: 0; }
+        .det-name { font-weight: 600; font-size: .88rem; }
+        .det-bbox { font-size: .7rem; color: var(--text-dim); margin-top: .1rem; font-family: monospace; }
+        .det-conf {
+            font-weight: 700;
+            font-size: .85rem;
+            color: var(--primary);
+        }
+        .det-empty { padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: .85rem; }
+
+        /* ── Download button ── */
+        .download-btn {
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: #fff;
+            border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: transform .1s;
+        }
+        .download-btn:active { transform: scale(.98); background: var(--primary-dark); }
+        .download-btn svg { width: 22px; height: 22px; }
+
+        /* ── Upload another (bottom) ── */
+        .new-upload {
+            display: block;
+            text-align: center;
+            padding: .85rem;
+            border: 1px dashed var(--card-border);
+            border-radius: 12px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: .88rem; font-weight: 600;
+            margin-bottom: 2rem;
+        }
+        .new-upload:active { background: rgba(34,197,94,.05); }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <img src="{% static 'detector/logo.jpg' %}" alt="Logo">
+            <h1>Results</h1>
+        </div>
+        <a href="{% url 'detector:upload' %}" class="back-link">← New</a>
+    </div>
+
+    <div class="content">
+
+        <!-- Processed Image -->
+        <div class="image-card">
+            {% if instance.processed_image %}
+                <img src="{{ instance.processed_image.url }}" alt="Processed Image">
+                <div class="image-label">🎯 Processed — {{ detections|length }} detection{{ detections|length|pluralize }}</div>
+            {% else %}
+                <div style="padding:2rem; text-align:center; color:var(--danger);">
+                    Processing failed.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Maps Button -->
+        <div class="maps-card">
+            {% if instance.latitude is not None and instance.longitude is not None %}
+                <div class="coords">
+                    <div class="coord-chip">
+                        <label>Lat</label>
+                        <div class="val">{{ instance.latitude }}</div>
+                    </div>
+                    <div class="coord-chip">
+                        <label>Long</label>
+                        <div class="val">{{ instance.longitude }}</div>
+                    </div>
+                </div>
+                <a href="https://www.google.com/maps?q={{ instance.latitude }},{{ instance.longitude }}" target="_blank" class="maps-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Open in Google Maps
+                </a>
+            {% else %}
+                <p class="no-gps">📍 No GPS geotag found in this image</p>
+            {% endif %}
+        </div>
+
+        <!-- Detected Trees -->
+        <div class="det-section">
+            <div class="det-header">
+                🌳 Detected Trees
+                <span class="det-count">{{ detections|length }}</span>
+            </div>
+            {% if detections %}
+                {% for det in detections %}
+                <div class="det-item">
+                    <div class="det-icon">🌲</div>
+                    <div class="det-info">
+                        <div class="det-name">{{ det.class_name }}</div>
+                        <div class="det-bbox">({{ det.bbox.x1 }}, {{ det.bbox.y1 }}) → ({{ det.bbox.x2 }}, {{ det.bbox.y2 }})</div>
+                    </div>
+                    <div class="det-conf">{{ det.confidence }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="det-empty">No trees detected in this image.</div>
+            {% endif %}
+        </div>
+
+        <!-- Download Processed Image -->
+        {% if instance.processed_image %}
+        <a href="{% url 'detector:download' instance.pk %}" class="download-btn" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Processed Image
+        </a>
+        {% endif %}
+
+        <!-- Upload Another -->
+        <a href="{% url 'detector:upload' %}" class="new-upload">
+            📷 Upload Another Image
+        </a>
+
+    </div>
+</body>
+</html>

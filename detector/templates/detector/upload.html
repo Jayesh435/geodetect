@@ -1,0 +1,297 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GeoDetect</title>
+    <link rel="icon" href="{% static 'detector/logo.jpg' %}">
+    <style>
+        :root {
+            --primary: #22c55e;
+            --primary-dark: #16a34a;
+            --bg: #0f1a0f;
+            --card: #1a2e1a;
+            --card-border: #2d4a2d;
+            --text: #e8f5e8;
+            --text-dim: #8cb88c;
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, #1a2e1a 0%, #0f1a0f 100%);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .header img { width: 40px; height: 40px; border-radius: 10px; }
+        .header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -.02em; }
+        .header span { font-size: .7rem; color: var(--text-dim); display: block; margin-top: 1px; }
+
+        /* ── Main content ── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1.25rem;
+            gap: 1.5rem;
+        }
+
+        /* ── Upload button area ── */
+        .upload-zone {
+            width: 100%; max-width: 400px;
+            background: var(--card);
+            border: 2px dashed var(--card-border);
+            border-radius: var(--radius);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            position: relative;
+            transition: border-color .2s, background .2s;
+        }
+        .upload-zone.active { border-color: var(--primary); background: rgba(34,197,94,.06); }
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
+        }
+        .upload-icon {
+            width: 72px; height: 72px;
+            margin: 0 auto 1rem;
+            background: rgba(34,197,94,.12);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+        }
+        .upload-zone p { color: var(--text-dim); font-size: .9rem; line-height: 1.5; }
+        .upload-zone .or { margin: .75rem 0; color: var(--text-dim); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
+
+        /* ── Camera / Gallery buttons ── */
+        .action-row {
+            display: flex; gap: .75rem; justify-content: center;
+            width: 100%; max-width: 400px;
+        }
+        .action-btn {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: .5rem;
+            padding: .85rem;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: .88rem; font-weight: 600;
+            cursor: pointer;
+            transition: background .15s;
+            position: relative;
+        }
+        .action-btn:active { background: rgba(34,197,94,.1); }
+        .action-btn input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+        .action-btn .icon { font-size: 1.3rem; }
+
+        /* ── Preview ── */
+        .preview-card {
+            width: 100%; max-width: 400px;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: none;
+        }
+        .preview-card img {
+            width: 100%; display: block;
+            max-height: 280px; object-fit: cover;
+        }
+        .preview-info {
+            padding: .75rem 1rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .preview-info .name { font-size: .82rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
+        .preview-info .size { font-size: .75rem; color: var(--text-dim); }
+
+        /* ── Submit ── */
+        .submit-btn {
+            width: 100%; max-width: 400px;
+            padding: 1rem;
+            background: var(--primary);
+            color: #fff; font-size: 1rem; font-weight: 700;
+            border: none; border-radius: 12px;
+            cursor: pointer;
+            display: none;
+            transition: background .15s, transform .1s;
+        }
+        .submit-btn:active { transform: scale(.98); background: var(--primary-dark); }
+        .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ── Loader ── */
+        .loader {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: .75rem;
+            width: 100%; max-width: 400px;
+            padding: 2rem;
+        }
+        .loader .ring {
+            width: 44px; height: 44px;
+            border: 4px solid var(--card-border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+        .loader p { color: var(--text-dim); font-size: .88rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Error ── */
+        .error-msg {
+            width: 100%; max-width: 400px;
+            background: rgba(239,68,68,.1);
+            border: 1px solid rgba(239,68,68,.3);
+            color: #fca5a5;
+            padding: .75rem 1rem;
+            border-radius: 10px;
+            font-size: .85rem;
+        }
+
+        /* ── Footer features ── */
+        .features {
+            display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center;
+            padding: .75rem 1.25rem 1.25rem;
+        }
+        .feat {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: .45rem .7rem;
+            font-size: .72rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <img src="{% static 'detector/logo.jpg' %}" alt="Logo">
+        <div>
+            <h1>GeoDetect</h1>
+            <span>Tree Detection &amp; GPS Extraction</span>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <form method="post" enctype="multipart/form-data" id="frm" class="main">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="error-msg">
+            {% for field, errors in form.errors.items %}{% for e in errors %}<p>{{ e }}</p>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="dropZone">
+            <div class="upload-icon">📷</div>
+            <p>Tap to take a photo<br>or choose from gallery</p>
+            <input type="file" accept="image/*" name="original_image" id="fileInput">
+        </div>
+
+        <!-- Camera / Gallery split buttons -->
+        <div class="action-row">
+            <label class="action-btn">
+                <span class="icon">📸</span> Camera
+                <input type="file" accept="image/*" capture="environment" id="camInput">
+            </label>
+            <label class="action-btn">
+                <span class="icon">🖼️</span> Gallery
+                <input type="file" accept="image/*" id="galInput">
+            </label>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-card" id="previewCard">
+            <img id="previewImg" alt="Preview">
+            <div class="preview-info">
+                <span class="name" id="fileName"></span>
+                <span class="size" id="fileSize"></span>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" id="submitBtn" disabled>
+            🔍 Detect Trees
+        </button>
+
+        <!-- Loading -->
+        <div class="loader" id="loader">
+            <div class="ring"></div>
+            <p>Analyzing image…</p>
+        </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="features">
+        <div class="feat">📍 GPS</div>
+        <div class="feat">🌳 Trees</div>
+        <div class="feat">📦 Boxes</div>
+        <div class="feat">📊 JSON</div>
+    </div>
+
+    <script>
+    const fileInput = document.getElementById('fileInput');
+    const camInput  = document.getElementById('camInput');
+    const galInput  = document.getElementById('galInput');
+    const previewCard = document.getElementById('previewCard');
+    const previewImg  = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+    const loader    = document.getElementById('loader');
+    const dropZone  = document.getElementById('dropZone');
+    const frm       = document.getElementById('frm');
+
+    function handleFile(file) {
+        if (!file) return;
+        // Copy into the main file input
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+        previewCard.style.display = 'block';
+        submitBtn.style.display = 'block';
+        submitBtn.disabled = false;
+        dropZone.classList.add('active');
+
+        const reader = new FileReader();
+        reader.onload = e => { previewImg.src = e.target.result; };
+        reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+    camInput.addEventListener('change',  e => handleFile(e.target.files[0]));
+    galInput.addEventListener('change',  e => handleFile(e.target.files[0]));
+
+    frm.addEventListener('submit', () => {
+        submitBtn.style.display = 'none';
+        loader.style.display = 'flex';
+    });
+    </script>
+</body>
+</html>

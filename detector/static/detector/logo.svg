@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Outer hexagon -->
+  <polygon points="100,5 185,52.5 185,147.5 100,195 15,147.5 15,52.5" fill="#E30613" stroke="none"/>
+  <!-- Inner cutout - top left triangle -->
+  <polygon points="55,65 100,90 55,115" fill="white"/>
+  <!-- Inner cutout - top right triangle -->
+  <polygon points="145,65 100,90 145,115" fill="white"/>
+  <!-- Inner cutout - bottom triangle -->
+  <polygon points="100,140 55,115 145,115" fill="white"/>
+  <!-- Center M/W shape formed by negative space -->
+  <polygon points="70,75 100,55 130,75 115,75 100,65 85,75" fill="white"/>
+  <polygon points="55,130 75,80 100,130 85,130 75,105 65,130" fill="white"/>
+  <polygon points="100,130 125,80 145,130 135,130 125,105 115,130" fill="white"/>
+</svg>
