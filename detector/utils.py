@@ -194,7 +194,12 @@ def analyze_with_gemini(image_path, lat=None, lon=None):
             image_data = f.read()
         
         # Create the model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Fallback logic: try 'gemini-1.5-flash', if redundant try 'gemini-pro-vision'
+        model_name = 'gemini-1.5-flash'
+        try:
+            model = genai.GenerativeModel(model_name)
+        except:
+            model = genai.GenerativeModel('gemini-pro-vision')
         
         # Prepare the image
         image_parts = [{
