@@ -24,32 +24,32 @@ def upload_image(request):
 
             # ── Extract GPS ──
             try:
-                # First try GPS coordinates from camera/geolocation API
-                latitude_param = request.POST.get('latitude')
-                longitude_param = request.POST.get('longitude')
+                # 1. Try to extract real GPS from image metadata (EXIF/XMP) first
+                #    This ensures Gallery images with location data use their actual location
+                lat, lon = extract_gps(original_path)
                 
-                if latitude_param and longitude_param:
-                    try:
-                        lat = round(float(latitude_param), 6)
-                        lon = round(float(longitude_param), 6)
-                        # Validate coordinates are sane
-                        if -90 <= lat <= 90 and -180 <= lon <= 180:
-                            instance.latitude = lat
-                            instance.longitude = lon
-                            print(f"GPS from geolocation API: {lat}, {lon}")
-                        else:
-                            raise ValueError("Invalid coordinate range")
-                    except (ValueError, TypeError):
-                        print(f"Invalid GPS coords from frontend: {latitude_param}, {longitude_param}")
-                        lat, lon = extract_gps(original_path)
-                        instance.latitude = lat
-                        instance.longitude = lon
-                else:
-                    # Fallback to image-based GPS extraction
-                    lat, lon = extract_gps(original_path)
+                if lat is not None and lon is not None:
                     instance.latitude = lat
                     instance.longitude = lon
-            except Exception:
+                    print(f"GPS extracted from image metadata: {lat}, {lon}")
+                else:
+                    # 2. Fallback: Use browser/device geolocation if available
+                    #    This handles "Camera" uploads that lack EXIF data
+                    latitude_param = request.POST.get('latitude')
+                    longitude_param = request.POST.get('longitude')
+                    
+                    if latitude_param and longitude_param:
+                        try:
+                            lat = round(float(latitude_param), 6)
+                            lon = round(float(longitude_param), 6)
+                            if -90 <= lat <= 90 and -180 <= lon <= 180:
+                                instance.latitude = lat
+                                instance.longitude = lon
+                                print(f"GPS from device geolocation: {lat}, {lon}")
+                        except (ValueError, TypeError):
+                            logger.warning(f"Invalid frontend GPS: {latitude_param}, {longitude_param}")
+            except Exception as e:
+                print(f"GPS extraction error: {e}")
                 instance.latitude = None
                 instance.longitude = None
 

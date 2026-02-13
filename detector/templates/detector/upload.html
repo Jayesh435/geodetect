@@ -275,12 +275,22 @@
 
     let currentGPS = null;
 
-    function handleFile(file, fromCamera = false) {
+    function handleFile(file) {
         if (!file) return;
-        // Copy into the main file input
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        fileInput.files = dt.files;
+        
+        // Always try to get device location when a file is selected
+        // This covers cases where:
+        // 1. User used "Camera" button
+        // 2. User used big dropzone -> "Take Photo"
+        // 3. User used big dropzone -> "Gallery" (but image has no EXIF, so current loc is better than nothing)
+        attemptCaptureLocation();
+
+        // Copy into the main file input if needed (e.g. from camera/gallery buttons)
+        if (fileInput.files[0] !== file) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+        }
 
         fileName.textContent = file.name;
         fileSize.textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
@@ -292,12 +302,16 @@
         const reader = new FileReader();
         reader.onload = e => { previewImg.src = e.target.result; };
         reader.readAsDataURL(file);
+    }
 
-        // If camera was used and we have GPS, add to hidden fields
-        if (fromCamera && currentGPS) {
-            latitudeInput.value = currentGPS.latitude;
-            longitudeInput.value = currentGPS.longitude;
-            console.log('GPS coords added:', currentGPS);
+    async function attemptCaptureLocation() {
+        try {
+            const gps = await getCurrentLocation();
+            latitudeInput.value = gps.latitude;
+            longitudeInput.value = gps.longitude;
+            console.log('Device GPS captured:', gps);
+        } catch (e) {
+            console.log('GPS capture skipped/failed:', e.message);
         }
     }
 
@@ -310,44 +324,20 @@
 
             navigator.geolocation.getCurrentPosition(
                 position => {
-                    const coords = {
+                    resolve({
                         latitude: position.coords.latitude.toFixed(6),
                         longitude: position.coords.longitude.toFixed(6)
-                    };
-                    resolve(coords);
+                    });
                 },
-                error => {
-                    console.warn('GPS error:', error.message);
-                    reject(error);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
-                }
+                error => reject(error),
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         });
     }
 
     fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+    camInput.addEventListener('change',  e => handleFile(e.target.files[0]));
     galInput.addEventListener('change',  e => handleFile(e.target.files[0]));
-
-    // Special handler for camera - get GPS first
-    camInput.addEventListener('change', async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Try to get GPS coordinates
-        try {
-            currentGPS = await getCurrentLocation();
-            console.log('GPS acquired for camera photo:', currentGPS);
-        } catch (error) {
-            console.warn('Could not get GPS for camera photo:', error.message);
-            currentGPS = null;
-        }
-
-        handleFile(file, true);
-    });
 
     frm.addEventListener('submit', () => {
         submitBtn.style.display = 'none';
