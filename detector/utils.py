@@ -1,6 +1,6 @@
 """
-Utility functions for GPS extraction and HSV-based
-green-vegetation / tree detection.
+Utility functions for GPS extraction, HSV-based
+green-vegetation / tree detection, and Gemini AI image analysis.
 """
 
 import cv2
@@ -11,6 +11,7 @@ from PIL.ExifTags import TAGS, GPSTAGS
 import os
 from django.conf import settings
 import logging
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +171,63 @@ def extract_gps(image_path):
         return lat, lon
 
     return None, None
+
+
+# ─── GEMINI AI IMAGE ANALYSIS ──────────────────────────────────────────
+
+def analyze_with_gemini(image_path):
+    """
+    Analyze image using Google Gemini AI for comprehensive description.
+    Returns detailed analysis of the image content, objects, environment, etc.
+    """
+    try:
+        # Configure Gemini API
+        api_key = os.environ.get('GEMINI_API_KEY')
+        if not api_key:
+            logger.warning("GEMINI_API_KEY not set - skipping AI analysis")
+            return "AI analysis unavailable - API key not configured"
+        
+        genai.configure(api_key=api_key)
+        
+        # Load the image
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+        
+        # Create the model
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Prepare the image
+        image_parts = [{
+            "mime_type": "image/jpeg",
+            "data": image_data
+        }]
+        
+        # Create comprehensive prompt for analysis
+        prompt = """Analyze this image comprehensively and provide a detailed description including:
+
+1. **Environment & Setting**: Describe the location, terrain, weather conditions, and overall environment
+2. **Vegetation & Nature**: Identify trees, plants, flowers, grass, and any natural elements with specific details
+3. **Objects & Structures**: List any man-made objects, buildings, vehicles, equipment, or infrastructure
+4. **People & Activities**: Describe any people visible and what they appear to be doing  
+5. **Geographic Clues**: Note any geographical features, landscape type, or regional characteristics
+6. **Image Quality**: Comment on lighting, clarity, perspective, and overall image quality
+7. **Notable Features**: Highlight any interesting, unusual, or significant elements
+
+Provide a rich, detailed analysis that would be useful for documentation, research, or cataloging purposes. Be specific about colors, quantities, sizes, and spatial relationships."""
+
+        # Generate response
+        response = model.generate_content([prompt] + image_parts)
+        
+        if response and response.text:
+            logger.info("Gemini analysis completed successfully")
+            return response.text.strip()
+        else:
+            logger.warning("Gemini returned empty response")
+            return "AI analysis completed but no description generated"
+            
+    except Exception as e:
+        logger.error(f"Gemini analysis failed: {e}")
+        return f"AI analysis failed: {str(e)}"
 
 
 # ─── HSV GREEN-VEGETATION DETECTION ──────────────────────────────

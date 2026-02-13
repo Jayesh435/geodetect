@@ -12,6 +12,8 @@ services:
         value: "0"
       - key: RENDER
         value: "1"
+      - key: GEMINI_API_KEY
+        value: "AIzaSyAScb0rwfOVuVUtQ5worK9oM_TjdFuDWf0"
     disk:
       name: geodetect-media
       mountPath: /app/media

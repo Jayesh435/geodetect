@@ -9,7 +9,7 @@ from django.shortcuts import render, get_object_or_404
 
 from .forms import ImageUploadForm
 from .models import ImageUpload
-from .utils import extract_gps, detect_objects
+from .utils import extract_gps, detect_objects, analyze_with_gemini
 
 
 def upload_image(request):
@@ -53,7 +53,7 @@ def upload_image(request):
                 instance.latitude = None
                 instance.longitude = None
 
-            # ── Run Roboflow detection ──
+            # ── Run tree detection ──
             try:
                 ext = os.path.splitext(original_path)[1]
                 processed_filename = f"processed_{uuid.uuid4().hex}{ext}"
@@ -68,6 +68,15 @@ def upload_image(request):
                 import traceback
                 traceback.print_exc()
                 instance.detections_json = [{'error': str(e)}]
+
+            # ── Run Gemini AI analysis ──
+            try:
+                description = analyze_with_gemini(original_path)
+                instance.gemini_description = description
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                instance.gemini_description = f"AI analysis failed: {str(e)}"
 
             instance.save()
 

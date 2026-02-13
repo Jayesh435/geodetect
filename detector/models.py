@@ -21,6 +21,7 @@ class ImageUpload(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     detections_json = models.JSONField(default=list, blank=True)
+    gemini_description = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
