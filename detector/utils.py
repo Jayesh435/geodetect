@@ -194,12 +194,16 @@ def analyze_with_gemini(image_path, lat=None, lon=None):
             image_data = f.read()
         
         # Create the model
-        # Fallback logic: try 'gemini-1.5-flash', if redundant try 'gemini-pro-vision'
-        model_name = 'gemini-1.5-flash'
+        # Use Gemini 2.5 Flash for best balance of speed and vision accuracy
+        model_name = 'gemini-2.5-flash'
         try:
             model = genai.GenerativeModel(model_name)
-        except:
-            model = genai.GenerativeModel('gemini-pro-vision')
+        except Exception:
+             try:
+                # Fallbacks in case of deployment rollouts
+                model = genai.GenerativeModel('gemini-2.0-flash')
+             except:
+                model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Prepare the image
         image_parts = [{
