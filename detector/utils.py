@@ -182,10 +182,15 @@ def analyze_with_gemini(image_path, lat=None, lon=None):
     """
     try:
         # Configure Gemini API
+        # Try environment variable first, then fallback to hardcoded key (for hackathon/demo)
         api_key = os.environ.get('GEMINI_API_KEY')
         if not api_key:
-            logger.warning("GEMINI_API_KEY not set - skipping AI analysis")
-            return "AI analysis unavailable - API key not configured"
+            api_key = "AIzaSyAScb0rwfOVuVUtQ5worK9oM_TjdFuDWf0"
+            logger.info("Using fallback API key")
+            
+        if not api_key:
+             logger.warning("GEMINI_API_KEY not set - skipping AI analysis")
+             return "AI analysis unavailable - API key not configured"
         
         genai.configure(api_key=api_key)
         
