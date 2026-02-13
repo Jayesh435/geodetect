@@ -71,7 +71,7 @@ def upload_image(request):
 
             # ── Run Gemini AI analysis ──
             try:
-                description = analyze_with_gemini(original_path)
+                description = analyze_with_gemini(original_path, lat=instance.latitude, lon=instance.longitude)
                 instance.gemini_description = description
             except Exception as e:
                 import traceback

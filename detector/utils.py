@@ -175,7 +175,7 @@ def extract_gps(image_path):
 
 # ─── GEMINI AI IMAGE ANALYSIS ──────────────────────────────────────────
 
-def analyze_with_gemini(image_path):
+def analyze_with_gemini(image_path, lat=None, lon=None):
     """
     Analyze image using Google Gemini AI for comprehensive description.
     Returns detailed analysis of the image content, objects, environment, etc.
@@ -202,18 +202,32 @@ def analyze_with_gemini(image_path):
             "data": image_data
         }]
         
+        # Build prompt with location context if available
+        location_context = ""
+        if lat and lon:
+            location_context = f"\n**Location Context**: This image was taken at approx Latitude {lat}, Longitude {lon}. Use this to help identify regional vegetation types."
+
         # Create comprehensive prompt for analysis
-        prompt = """Analyze this image comprehensively and provide a detailed description including:
+        prompt = f"""Act as an expert botanist and geospatial analyst. Analyze this image and provide a structured report.{location_context}
 
-1. **Environment & Setting**: Describe the location, terrain, weather conditions, and overall environment
-2. **Vegetation & Nature**: Identify trees, plants, flowers, grass, and any natural elements with specific details
-3. **Objects & Structures**: List any man-made objects, buildings, vehicles, equipment, or infrastructure
-4. **People & Activities**: Describe any people visible and what they appear to be doing  
-5. **Geographic Clues**: Note any geographical features, landscape type, or regional characteristics
-6. **Image Quality**: Comment on lighting, clarity, perspective, and overall image quality
-7. **Notable Features**: Highlight any interesting, unusual, or significant elements
+1.  **Identified Flora (Trees & Plants)**:
+    *   List specific tree/plant species identified (Scientific Name & Common Name if possible).
+    *   Estimate count, health status, and growth stage.
+    *   Describe foliage type (broadleaf, needle, etc.).
 
-Provide a rich, detailed analysis that would be useful for documentation, research, or cataloging purposes. Be specific about colors, quantities, sizes, and spatial relationships."""
+2.  **Identified Objects & Infrastructure**:
+    *   List all man-made objects (poles, buildings, vehicles, fences).
+    *   Describe their condition and relation to the vegetation.
+
+3.  **Location & Environment**:
+    *   Describe the setting (Urban, Forest, Park, Roadside, Agricultural).
+    *   Note terrain, soil type, and weather conditions.
+    *   Analyze any visible geographical markers.
+
+4.  **Summary**:
+    *   Provide a 1-sentence summary of the scene.
+
+Format your response clearly. Focus on accuracy and identification."""
 
         # Generate response
         response = model.generate_content([prompt] + image_parts)
