@@ -217,26 +217,19 @@ def analyze_with_gemini(image_path, lat=None, lon=None):
             location_context = f"\n**Location Context**: This image was taken at approx Latitude {lat}, Longitude {lon}. Use this to help identify regional vegetation types."
 
         # Create comprehensive prompt for analysis
-        prompt = f"""Act as an expert botanist and geospatial analyst. Analyze this image and provide a structured report.{location_context}
+        prompt = f"""Act as an expert botanist and geospatial analyst. Analyze this image.{location_context}
 
-1.  **Identified Flora (Trees & Plants)**:
-    *   List specific tree/plant species identified (Scientific Name & Common Name if possible).
-    *   Estimate count, health status, and growth stage.
-    *   Describe foliage type (broadleaf, needle, etc.).
+1.  **Summary of Key Objects**:
+    *   Provide a concise list of the main objects visible (e.g., "2 large Banyan trees, 1 light pole, brick wall").
 
-2.  **Identified Objects & Infrastructure**:
-    *   List all man-made objects (poles, buildings, vehicles, fences).
-    *   Describe their condition and relation to the vegetation.
+2.  **Flora Identification**:
+    *   Identify the main tree/plant species (Common & Scientific Name).
+    *   Briefly note health/condition.
 
-3.  **Location & Environment**:
-    *   Describe the setting (Urban, Forest, Park, Roadside, Agricultural).
-    *   Note terrain, soil type, and weather conditions.
-    *   Analyze any visible geographical markers.
+3.  **Environment**:
+    *   One sentence describing the location/setting.
 
-4.  **Summary**:
-    *   Provide a 1-sentence summary of the scene.
-
-Format your response clearly. Focus on accuracy and identification."""
+Keep the response short, direct, and focused on identifying the main subjects."""
 
         # Generate response
         response = model.generate_content([prompt] + image_parts)
